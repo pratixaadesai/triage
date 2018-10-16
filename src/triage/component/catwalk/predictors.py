@@ -152,7 +152,7 @@ class Predictor(object):
             session.commit()
             session.close()
             with tempfile.TemporaryFile(mode="w+") as f:
-                writer = csv.writer(f, quoting=csv.QUOTE_MINIMAL)
+                writer = csv.writer(f, quoting=csv.QUOTE_MINIMAL, lineterminator='\n')
                 for index, score, label in zip(
                     matrix_store.matrix.index, predictions, labels
                 ):

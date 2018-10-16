@@ -94,3 +94,4 @@ class ModelTester(object):
                     matrix_store=store,
                     model_id=model_id,
                 )
+        return True

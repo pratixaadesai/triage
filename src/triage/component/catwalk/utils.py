@@ -118,7 +118,7 @@ def save_db_objects(db_engine, db_objects):
         db_objects (list) SQLAlchemy model objects, corresponding to a valid table
     """
     with tempfile.TemporaryFile(mode="w+") as f:
-        writer = csv.writer(f, quoting=csv.QUOTE_MINIMAL)
+        writer = csv.writer(f, quoting=csv.QUOTE_MINIMAL, lineterminator='\n')
         for db_object in db_objects:
             writer.writerow(
                 [getattr(db_object, col.name) for col in db_object.__table__.columns]
