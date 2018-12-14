@@ -160,6 +160,23 @@ def test_aggregation_table_name_no_schema():
     )
 
 
+def test_get_feature_columns():
+    n = Aggregate("x", "sum", {})
+    d = Aggregate("1", "count", {})
+    m = Aggregate("y", "avg", {})
+    assert Aggregation(
+        aggregates=[n, d, m],
+        from_obj="source",
+        schema="schema",
+        prefix="prefix",
+        groups=["entity_id"],
+        state_table="tbl"
+    ).feature_columns() == [
+        "prefix_entity_id_x_sum",
+        "prefix_entity_id_1_count",
+        "prefix_entity_id_y_avg"
+    ]
+
 def test_distinct():
     assert list(map(str, Aggregate("distinct x", "count", {}).get_columns())) == [
         "count(distinct x)"

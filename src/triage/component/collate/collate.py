@@ -489,6 +489,13 @@ class Aggregation(object):
 
         return chain(*[a.get_columns(prefix=prefix) for a in self.aggregates])
 
+    def feature_columns(self):
+        columns = []
+        for group, groupby in self.groups.items():
+            for label_obj in self._get_aggregates_sql(group):
+                columns.append(label_obj.name)
+        return columns
+
     def get_selects(self):
         """
         Constructs select queries for this aggregation
