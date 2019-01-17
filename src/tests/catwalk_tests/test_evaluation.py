@@ -285,10 +285,8 @@ def test_evaluating_early_warning():
         # Run tests for overall and subset evaluations
         for subset in [None] + SUBSETS:
             if subset is None:
-                table_name = "evaluations"
                 where_hash = ""
             else:
-                table_name = "subset_evaluations"
                 SubsetFactory(subset_hash=subset["hash"])
                 session.commit()
                 where_hash = f"and subset_hash = '{subset['hash']}'"
@@ -307,7 +305,7 @@ def test_evaluating_early_warning():
                     for row in db_engine.execute(
                         f"""\
                         select distinct(metric || parameter)
-                        from test_results.{table_name}
+                        from test_results.evaluations
                         where model_id = %s and
                         evaluation_start_time = %s
                         {where_hash}
@@ -371,7 +369,7 @@ def test_evaluating_early_warning():
                     row[0]
                     for row in db_engine.execute(
                         f"""select distinct(metric || parameter)
-                        from train_results.{table_name}
+                        from train_results.evaluations
                         where model_id = %s and
                         evaluation_start_time = %s
                         {where_hash}
@@ -470,25 +468,28 @@ def test_ModelEvaluator_needs_evaluation(db_engine):
 
     # create two models: one that has zero evaluations,
     # one that has an evaluation for precision@100_abs
+    # both overall and for each subset
     model_with_evaluations = ModelFactory()
     model_without_evaluations = ModelFactory()
 
     eval_time = datetime.datetime(2016, 1, 1)
     as_of_date_frequency = "3d"
-    EvaluationFactory(
-        model_rel=model_with_evaluations,
-        evaluation_start_time=eval_time,
-        evaluation_end_time=eval_time,
-        as_of_date_frequency=as_of_date_frequency,
-        metric="precision@",
-        parameter="100_abs"
-    )
+    for subset_hash in [''] + [subset['hash'] for subset in SUBSETS]:
+        EvaluationFactory(
+            model_rel=model_with_evaluations,
+            evaluation_start_time=eval_time,
+            evaluation_end_time=eval_time,
+            as_of_date_frequency=as_of_date_frequency,
+            metric="precision@",
+            parameter="100_abs",
+            subset_hash=subset_hash,
+        )
     session.commit()
 
     # make a test matrix to pass in
     metadata_overrides = {
         'as_of_date_frequency': as_of_date_frequency,
-        'end_time': eval_time,
+        'as_of_times': [eval_time],
     }
     test_matrix_store = MockMatrixStore(
         "test", "1234", 5, db_engine, metadata_overrides=metadata_overrides
@@ -499,62 +500,90 @@ def test_ModelEvaluator_needs_evaluation(db_engine):
 
     # the evaluated model has test evaluations for precision, but not recall,
     # so this needs evaluations
-    assert ModelEvaluator(
-        testing_metric_groups=[{
-            "metrics": ["precision@", "recall@"],
-            "thresholds": {"top_n": [100]},
-        }],
-        training_metric_groups=[],
-        db_engine=db_engine
-    ).needs_evaluations(
-        matrix_store=test_matrix_store,
-        model_id=model_with_evaluations.model_id,
-    )
+    for subset in [None] + SUBSETS:
+        if not subset:
+            subset_hash = ''
+        else:
+            subset_hash = subset['hash']
+        
+        assert ModelEvaluator(
+            testing_metric_groups=[{
+                "metrics": ["precision@", "recall@"],
+                "thresholds": {"top_n": [100]},
+            }],
+            training_metric_groups=[],
+            db_engine=db_engine,
+        ).needs_evaluations(
+            matrix_store=test_matrix_store,
+            model_id=model_with_evaluations.model_id,
+            subset_hash=subset_hash,
+        )
 
     # the evaluated model has test evaluations for precision,
     # so this should not need evaluations
-    assert not ModelEvaluator(
-        testing_metric_groups=[{
-            "metrics": ["precision@"],
-            "thresholds": {"top_n": [100]},
-        }],
-        training_metric_groups=[],
-        db_engine=db_engine
-    ).needs_evaluations(
-        matrix_store=test_matrix_store,
-        model_id=model_with_evaluations.model_id,
-    )
+    for subset in [None] + SUBSETS:
+        if not subset:
+            subset_hash = ''
+        else:
+            subset_hash = subset['hash']
+
+        assert not ModelEvaluator(
+            testing_metric_groups=[{
+                "metrics": ["precision@"],
+                "thresholds": {"top_n": [100]},
+            }],
+            training_metric_groups=[],
+            db_engine=db_engine,
+        ).needs_evaluations(
+            matrix_store=test_matrix_store,
+            model_id=model_with_evaluations.model_id,
+            subset_hash=subset_hash,
+        )
 
     # the non-evaluated model has no evaluations,
     # so this should need evaluations
-    assert ModelEvaluator(
-        testing_metric_groups=[{
-            "metrics": ["precision@"],
-            "thresholds": {"top_n": [100]},
-        }],
-        training_metric_groups=[],
-        db_engine=db_engine
-    ).needs_evaluations(
-        matrix_store=test_matrix_store,
-        model_id=model_without_evaluations.model_id,
-    )
+    for subset in [None] + SUBSETS:
+        if not subset:
+            subset_hash = ''
+        else:
+            subset_hash = subset['hash']
+        
+        assert ModelEvaluator(
+            testing_metric_groups=[{
+                "metrics": ["precision@"],
+                "thresholds": {"top_n": [100]},
+            }],
+            training_metric_groups=[],
+            db_engine=db_engine,
+        ).needs_evaluations(
+            matrix_store=test_matrix_store,
+            model_id=model_without_evaluations.model_id,
+            subset_hash=subset_hash,
+        )
 
     # the evaluated model has no *train* evaluations,
     # so the train matrix should need evaluations
-    assert ModelEvaluator(
-        testing_metric_groups=[{
-            "metrics": ["precision@"],
-            "thresholds": {"top_n": [100]},
-        }],
-        training_metric_groups=[{
-            "metrics": ["precision@"],
-            "thresholds": {"top_n": [100]},
-        }],
-        db_engine=db_engine
-    ).needs_evaluations(
-        matrix_store=train_matrix_store,
-        model_id=model_with_evaluations.model_id,
-    )
+    for subset in [None] + SUBSETS:
+        if not subset:
+            subset_hash = ''
+        else:
+            subset_hash = subset['hash']
+        
+        assert ModelEvaluator(
+            testing_metric_groups=[{
+                "metrics": ["precision@"],
+                "thresholds": {"top_n": [100]},
+            }],
+            training_metric_groups=[{
+                "metrics": ["precision@"],
+                "thresholds": {"top_n": [100]},
+            }],
+            db_engine=db_engine
+        ).needs_evaluations(
+            matrix_store=train_matrix_store,
+            model_id=model_with_evaluations.model_id,
+            subset_hash=subset_hash,
+        )
     session.close()
     session.remove()
 
