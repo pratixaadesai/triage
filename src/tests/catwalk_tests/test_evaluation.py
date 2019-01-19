@@ -281,7 +281,6 @@ def test_evaluating_early_warning():
         fake_test_matrix_store = fake_matrix_from_db(db_engine, "test", matrix_uuid, num_entities, as_of_date)
         fake_train_matrix_store = fake_matrix_from_db(db_engine, "train", matrix_uuid, num_entities, as_of_date)
 
-
         # Run tests for overall and subset evaluations
         for subset in [None] + SUBSETS:
             if subset is None:

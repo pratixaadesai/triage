@@ -296,5 +296,3 @@ class TrainEvaluation(Base):
 
     model_rel = relationship("Model")
 
-
-

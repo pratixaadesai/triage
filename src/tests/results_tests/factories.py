@@ -192,6 +192,25 @@ class EvaluationFactory(factory.alchemy.SQLAlchemyModelFactory):
     sort_seed = 8
 
 
+class SubsetEvaluationFactory(factory.alchemy.SQLAlchemyModelFactory):
+    class Meta:
+        model = schema.TestEvaluation
+        sqlalchemy_session = session
+
+    model_rel = factory.SubFactory(ModelFactory)
+    subset_rel = factory.SubFactory(SubsetFactory)
+    evaluation_start_time = factory.fuzzy.FuzzyNaiveDateTime(datetime(2008, 1, 1))
+    evaluation_end_time = factory.fuzzy.FuzzyNaiveDateTime(datetime(2008, 1, 1))
+    as_of_date_frequency = "3d"
+    metric = "precision@"
+    parameter = "100_abs"
+    value = factory.fuzzy.FuzzyDecimal(0, 1)
+    num_labeled_examples = 10
+    num_labeled_above_threshold = 8
+    num_positive_labels = 5
+    sort_seed = 8
+
+
 def init_engine(new_engine):
     global sessionmaker, engine, session
     engine = new_engine
