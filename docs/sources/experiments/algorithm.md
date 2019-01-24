@@ -334,9 +334,8 @@ evaluator will then subset the predictions on valid entity-date pairs for the
 given model and will calculate metrics for the subset, re-applying thresholds
 as necessary to the predictions in the subset. Subset definitions are stored in
 the `model_metadata.subsets` table, and the evaluations are stored in the
-`subset_evaluations` tables in the `train_results` and `test_results` schemas.
-A hash of the subset configuration links the `subsets` and `subset_evaluations`
-tables.
+`evaluations` tables. A hash of the subset configuration identifies subset
+evaluations and links the `subsets` table.
 
 ### Recap
 At this point, the 'model_metadata', 'train_results', and 'test_results' database schemas are fully populated with data about models, model groups, predictions, feature importances, and evaluation metrics for the researcher to query. In addition, the trained model pickle files are saved in the configured project path. The experiment is considered finished.
