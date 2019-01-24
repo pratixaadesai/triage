@@ -112,7 +112,7 @@ class FeatureImportanceFactory(factory.alchemy.SQLAlchemyModelFactory):
     rank_pct = 1.0
 
 
-class TestPredictionFactory(factory.alchemy.SQLAlchemyModelFactory):
+class PredictionFactory(factory.alchemy.SQLAlchemyModelFactory):
     class Meta:
         model = schema.TestPrediction
         sqlalchemy_session = session
@@ -127,21 +127,6 @@ class TestPredictionFactory(factory.alchemy.SQLAlchemyModelFactory):
     matrix_uuid = factory.SelfAttribute("model_rel.train_matrix_uuid")
     test_label_timespan = "3m"
 
-
-class TrainPredictionFactory(factory.alchemy.SQLAlchemyModelFactory):
-    class Meta:
-        model = schema.TrainPrediction
-        sqlalchemy_session = session
-
-    model_rel = factory.SubFactory(ModelFactory)
-    entity_id = factory.fuzzy.FuzzyInteger(0)
-    as_of_date = factory.fuzzy.FuzzyNaiveDateTime(datetime(2008, 1, 1))
-    score = factory.fuzzy.FuzzyDecimal(0, 1)
-    label_value = factory.fuzzy.FuzzyInteger(0, 1)
-    rank_abs = 1
-    rank_pct = 1.0
-    matrix_uuid = factory.SelfAttribute("model_rel.train_matrix_uuid")
-    test_label_timespan = "3m"
 
 
 class ListPredictionFactory(factory.alchemy.SQLAlchemyModelFactory):

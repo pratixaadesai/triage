@@ -14,8 +14,7 @@ from tests.results_tests.factories import ModelFactory, EvaluationFactory, init_
 from tests.utils import fake_trained_model, MockMatrixStore
 from tests.results_tests.factories import (
     ModelFactory,
-    TestPredictionFactory,
-    TrainPredictionFactory,
+    PredictionFactory,
     SubsetFactory,
     init_engine,
     session,
@@ -70,22 +69,13 @@ def setup_results_schema(db_engine, num_entities, labels):
     # to look like
     model = ModelFactory()
 
-    class ImmediateTestPredictionFactory(TestPredictionFactory):
-        as_of_date = factory.LazyAttribute(
-            lambda o: o.model_rel.train_end_time
-        )
-    class ImmediateTrainPredictionFactory(TrainPredictionFactory):
+    class ImmediatePredictionFactory(PredictionFactory):
         as_of_date = factory.LazyAttribute(
             lambda o: o.model_rel.train_end_time
         )
     
     for entity in range(0, num_entities):
-        ImmediateTestPredictionFactory(
-            model_rel=model,
-            entity_id=entity,
-            label_value=labels[entity],
-        )
-        ImmediateTrainPredictionFactory(
+        ImmediatePredictionFactory(
             model_rel=model,
             entity_id=entity,
             label_value=labels[entity],

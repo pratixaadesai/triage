@@ -8,8 +8,7 @@ from .factories import (
     ModelFactory,
     SubsetFactory,
     EvaluationFactory,
-    TestPredictionFactory,
-    TrainPredictionFactory,
+    PredictionFactory,
     IndividualImportanceFactory,
     init_engine,
     session,
@@ -113,29 +112,23 @@ def test_prediction_factories():
             )
         session.commit()
 
-        for factory in [TestPredictionFactory, TrainPredictionFactory]:
-            # create some basic predictions, but with the same model group and
-            # model to test the factory relationships
-            for entity_id, as_of_date in entity_dates:
-                factory(
-                    model_rel=model, entity_id=entity_id, as_of_date=as_of_date
-                )
-            session.commit()
-
-            if factory == TestPredictionFactory:
-                results_schema = "test_results"
-            elif factory == TrainPredictionFactory:
-                results_schema = "train_results"
-
-            results = engine.execute(
-                f"""
-                select m.*, p.*
-                from
-                    {results_schema}.predictions p
-                    join model_metadata.models m using (model_id)
-                    join test_results.individual_importances i using (model_id, entity_id, as_of_date)
-                """
+        # create some basic predictions, but with the same model group and
+        # model to test the factory relationships
+        for entity_id, as_of_date in entity_dates:
+            PredictionFactory(
+                model_rel=model, entity_id=entity_id, as_of_date=as_of_date
             )
-            assert len([row for row in results]) == 6
-            # if the predictions are created with the model,
-            # the join should work and we should have the original six results
+        session.commit()
+
+        results = engine.execute(
+            f"""
+            select m.*, p.*
+            from
+                test_results.predictions p
+                join model_metadata.models m using (model_id)
+                join test_results.individual_importances i using (model_id, entity_id, as_of_date)
+            """
+        )
+        assert len([row for row in results]) == 6
+        # if the predictions are created with the model,
+        # the join should work and we should have the original six results
