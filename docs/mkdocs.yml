@@ -5,6 +5,13 @@ repo_url: http://github.com/dssg/triage
 edit_uri: blob/master/docs/templates
 site_description: 'Documentation for Triage.'
 
+markdown_extensions:
+    - inline_graphviz
+    - def_list
+    - toc:
+        permalink: True
+        baselevel: 2
+
 pages:
   - Home: index.md
   - Experiment Documentation:
